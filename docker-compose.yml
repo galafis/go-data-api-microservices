@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:13-alpine
+    container_name: go-data-api-postgres
+    environment:
+      POSTGRES_DB: data_api
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - go-data-api-network
+    restart: unless-stopped
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: go-data-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - ENVIRONMENT=production
+      - SERVER_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=data_api
+      - DB_SSL_MODE=disable
+      - JWT_SECRET=your-production-secret-key
+      - ACCESS_TOKEN_EXPIRY=15m
+      - REFRESH_TOKEN_EXPIRY=7d
+      - PASSWORD_HASH_COST=10
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      - LOG_OUTPUT=stdout
+    depends_on:
+      - postgres
+    networks:
+      - go-data-api-network
+    restart: unless-stopped
+
+  # Data Service
+  data-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: go-data-api-data-service
+    ports:
+      - "8081:8080"
+    environment:
+      - ENVIRONMENT=production
+      - SERVER_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=data_api
+      - DB_SSL_MODE=disable
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      - LOG_OUTPUT=stdout
+    depends_on:
+      - postgres
+    networks:
+      - go-data-api-network
+    restart: unless-stopped
+
+  # Auth Service
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: go-data-api-auth-service
+    ports:
+      - "8082:8080"
+    environment:
+      - ENVIRONMENT=production
+      - SERVER_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=data_api
+      - DB_SSL_MODE=disable
+      - JWT_SECRET=your-production-secret-key
+      - ACCESS_TOKEN_EXPIRY=15m
+      - REFRESH_TOKEN_EXPIRY=7d
+      - PASSWORD_HASH_COST=10
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      - LOG_OUTPUT=stdout
+    depends_on:
+      - postgres
+    networks:
+      - go-data-api-network
+    restart: unless-stopped
+
+  # Analytics Service
+  analytics-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: go-data-api-analytics-service
+    ports:
+      - "8083:8080"
+    environment:
+      - ENVIRONMENT=production
+      - SERVER_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=data_api
+      - DB_SSL_MODE=disable
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      - LOG_OUTPUT=stdout
+    depends_on:
+      - postgres
+    networks:
+      - go-data-api-network
+    restart: unless-stopped
+
+networks:
+  go-data-api-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
