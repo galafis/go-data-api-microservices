@@ -1,221 +1,158 @@
-# Analytics Service Scripts
+# 📦 Analytics Service Scripts — Guia Rápido / Quick Start
 
-Automation and utility scripts for the Analytics Service development, testing, deployment, and maintenance workflows.
+Autor/Author: Gabriel Demetrios Lafis
 
-## 🔗 Quick Links
+Este README foi projetado para onboarding rápido, com exemplos práticos, tabelas resumidas, dicas de CI/CD, troubleshooting e boas práticas. Versão bilíngue: Português e Inglês, lado a lado quando aplicável.
 
-- **[Analytics Service](../README.md)** - Main service documentation
-- **[API Documentation](../api/v1/README.md)** - REST API reference
-- **[Deployment Guides](../deployments/)** - Docker and Kubernetes deployment
-- **[Technical Documentation](../docs/README.md)** - Comprehensive technical docs
+This README is designed for rapid onboarding, with practical examples, summary tables, CI/CD tips, troubleshooting, and best practices. Bilingual: Portuguese and English, side-by-side when applicable.
 
-## 📋 Script Directory
+---
 
-### 🔨 Build & Development
-- **`build.sh`** - Build and compile the Analytics Service
-- **`dev.sh`** - Start development server with hot reload
-- **`clean.sh`** - Clean build artifacts and temporary files
-- **`deps.sh`** - Install and update dependencies
+## 🔗 Índice / Table of Contents
+- Visão Geral / Overview
+- Tabela de Scripts / Scripts Matrix
+- Como usar por ambiente / Environment-based usage
+- Exemplos práticos / Practical examples
+- Variáveis de ambiente / Environment variables
+- Integração CI/CD / CI/CD integration
+- Boas práticas / Best practices
+- Troubleshooting / Troubleshooting
+- Manutenção / Maintenance
+- Créditos / Credits
 
-### 🧪 Testing & Quality
-- **`test.sh`** - Run all tests with coverage reports
-- **`test-unit.sh`** - Run unit tests only
-- **`test-integration.sh`** - Run integration tests
-- **`lint.sh`** - Code linting and formatting
-- **`security.sh`** - Security vulnerability scanning
+---
 
-### 🚀 Deployment
-- **`deploy.sh`** - Complete deployment automation
-- **`docker-build.sh`** - Build Docker images
-- **`k8s-deploy.sh`** - Kubernetes deployment
-- **`rollback.sh`** - Rollback to previous version
+## 🧭 Visão Geral / Overview
+- PT: Scripts de automação para desenvolvimento, testes, build, deploy, banco de dados e manutenção do Analytics Service.
+- EN: Automation scripts for development, testing, build, deployment, database, and maintenance for the Analytics Service.
 
-### 💾 Database & Data
-- **`migrate.sh`** - Database schema migrations
-- **`seed.sh`** - Seed database with test data
-- **`backup.sh`** - Database backup utilities
-- **`restore.sh`** - Database restore utilities
+---
 
-### 📈 Monitoring & Maintenance
-- **`health-check.sh`** - Service health verification
-- **`logs.sh`** - Log collection and analysis
-- **`metrics.sh`** - Performance metrics collection
-- **`cleanup.sh`** - Maintenance cleanup tasks
+## 📚 Tabela de Scripts / Scripts Matrix
 
-## 🚀 Quick Start
+| Categoria / Category | Script | Descrição (PT) | Description (EN) |
+|---|---|---|---|
+| Build & Dev | build.sh | Compila o serviço com otimizações | Builds service with optimizations |
+| Build & Dev | dev.sh | Sobe servidor com hot reload | Starts dev server with hot reload |
+| Build & Dev | clean.sh | Limpa artefatos de build | Cleans build artifacts |
+| Build & Dev | deps.sh | Instala/atualiza dependências | Installs/updates dependencies |
+| Test & Quality | test.sh | Executa suíte completa com cobertura | Runs full test suite with coverage |
+| Test & Quality | test-unit.sh | Executa testes unitários | Runs unit tests |
+| Test & Quality | test-integration.sh | Executa testes de integração | Runs integration tests |
+| Test & Quality | lint.sh | Lint e formatação | Linting and formatting |
+| Test & Quality | security.sh | Scan de vulnerabilidades | Security vulnerability scanning |
+| Deployment | deploy.sh | Deploy automatizado por ambiente | Automated environment deployment |
+| Deployment | docker-build.sh | Build de imagem Docker | Docker image build |
+| Deployment | k8s-deploy.sh | Deploy no Kubernetes | Kubernetes deployment |
+| Deployment | rollback.sh | Rollback de versão | Version rollback |
+| Database & Data | migrate.sh | Migrações de schema | Schema migrations |
+| Database & Data | seed.sh | Seed de dados de teste | Test data seeding |
+| Database & Data | backup.sh | Backup do banco | Database backup |
+| Database & Data | restore.sh | Restore do banco | Database restore |
+| Monitoring & Ops | health-check.sh | Verifica saúde do serviço | Service health check |
+| Monitoring & Ops | logs.sh | Coleta/análise de logs | Log collection/analysis |
+| Monitoring & Ops | metrics.sh | Coleta de métricas | Metrics collection |
+| Monitoring & Ops | cleanup.sh | Limpeza de manutenção | Maintenance cleanup |
 
-### Development Workflow
+Dica/Tip: Todos os scripts aceitam --help quando disponível. Many scripts support --help.
 
-```bash
-# 1. Set up development environment
-./scripts/deps.sh
+---
 
-# 2. Run tests
-./scripts/test.sh
+## 🏗️ Como usar por ambiente / Environment-based usage
 
-# 3. Start development server
-./scripts/dev.sh
+- Desenvolvimento / Development:
+  - PT: Rodar deps, testes e servidor de desenvolvimento.
+  - EN: Run deps, tests, and development server.
+  - bash:
+    - ./scripts/deps.sh
+    - ./scripts/test.sh --verbose
+    - ./scripts/dev.sh
 
-# 4. Build for production
-./scripts/build.sh
-```
+- Staging:
+  - PT: Build, imagem Docker e deploy em staging.
+  - EN: Build, Docker image, and deploy to staging.
+  - bash:
+    - ./scripts/build.sh --version=$(git rev-parse --short HEAD)
+    - ./scripts/docker-build.sh
+    - ./scripts/deploy.sh staging
 
-### Deployment Workflow
+- Produção / Production:
+  - PT: Confirmar e registrar rollout.
+  - EN: Confirm and record rollout.
+  - bash:
+    - ./scripts/test.sh
+    - ./scripts/build.sh --version=$TAG
+    - ./scripts/deploy.sh prod --confirm
 
-```bash
-# 1. Run full test suite
-./scripts/test.sh
+Rollback:
+- PT: Reverter rapidamente em caso de falha.
+- EN: Quick revert on failure.
+- bash:
+  - ./scripts/rollback.sh --to=$PREV_TAG
 
-# 2. Build Docker image
-./scripts/docker-build.sh
+---
 
-# 3. Deploy to staging
-./scripts/deploy.sh staging
+## 🧪 Exemplos práticos / Practical examples
 
-# 4. Deploy to production
-./scripts/deploy.sh production
-```
+Build multiplataforma / Cross-platform build:
+- ./scripts/build.sh --os=linux --arch=amd64 --version=v1.2.3
 
-## 📄 Detailed Script Usage
+Testes com cobertura HTML / HTML coverage:
+- ./scripts/test.sh --html-coverage
 
-### build.sh
-Builds the Analytics Service binary with optimization flags.
+Migrações / Migrations:
+- ./scripts/migrate.sh up
+- ./scripts/migrate.sh create add_user_preferences
 
-```bash
-# Basic build
-./scripts/build.sh
+Health check pré-deploy / Pre-deploy health check:
+- ./scripts/health-check.sh --prereq
 
-# Build with specific version
-./scripts/build.sh --version=v1.2.3
+Debug detalhado / Verbose debug:
+- DEBUG=1 ./scripts/build.sh
+- ./scripts/build.sh --debug
 
-# Build for different platform
-./scripts/build.sh --os=linux --arch=amd64
-```
+---
 
-**Options:**
-- `--version`: Set build version
-- `--os`: Target operating system
-- `--arch`: Target architecture
-- `--debug`: Build with debug symbols
+## ⚙️ Variáveis de ambiente / Environment variables
 
-### test.sh
-Executes comprehensive test suite with coverage reporting.
-
-```bash
-# Run all tests
-./scripts/test.sh
-
-# Run with verbose output
-./scripts/test.sh --verbose
-
-# Generate HTML coverage report
-./scripts/test.sh --html-coverage
-
-# Run specific test package
-./scripts/test.sh --package=./internal/analytics
-```
-
-**Features:**
-- Unit and integration test execution
-- Coverage report generation
-- Benchmark testing
-- Race condition detection
-
-### deploy.sh
-Automated deployment to various environments.
+Exemplo / Example:
 
 ```bash
-# Deploy to development
-./scripts/deploy.sh dev
-
-# Deploy to staging
-./scripts/deploy.sh staging
-
-# Deploy to production with confirmation
-./scripts/deploy.sh prod --confirm
-
-# Dry run deployment
-./scripts/deploy.sh prod --dry-run
-```
-
-**Environments:**
-- `dev` - Development environment
-- `staging` - Staging environment
-- `prod` - Production environment
-
-**Options:**
-- `--confirm`: Require manual confirmation
-- `--dry-run`: Simulate deployment
-- `--rollback`: Rollback to previous version
-
-### migrate.sh
-Database migration management.
-
-```bash
-# Apply all pending migrations
-./scripts/migrate.sh up
-
-# Rollback last migration
-./scripts/migrate.sh down
-
-# Show migration status
-./scripts/migrate.sh status
-
-# Create new migration
-./scripts/migrate.sh create add_user_preferences
-```
-
-**Commands:**
-- `up` - Apply pending migrations
-- `down` - Rollback migrations
-- `status` - Show migration status
-- `create` - Create new migration file
-
-## 🔧 Configuration
-
-### Environment Variables
-Scripts use these environment variables for configuration:
-
-```bash
-# Service Configuration
+# Service
 export ANALYTICS_ENV="development"
 export ANALYTICS_PORT="8083"
 export LOG_LEVEL="info"
 
-# Database Configuration
+# Database
 export DB_HOST="localhost"
 export DB_PORT="5432"
 export DB_NAME="analytics_dev"
 export DB_USER="analytics_user"
 
-# Docker Configuration
+# Docker
 export DOCKER_REGISTRY="your-registry.com"
 export DOCKER_TAG="latest"
 
-# Kubernetes Configuration
+# Kubernetes
 export KUBECONFIG="~/.kube/config"
 export K8S_NAMESPACE="analytics"
 ```
 
-### Script Configuration Files
-- **`.env.scripts`** - Script-specific environment variables
-- **`config/build.yaml`** - Build configuration
-- **`config/deploy.yaml`** - Deployment configuration
-- **`config/test.yaml`** - Testing configuration
+Arquivos de config / Config files:
+- .env.scripts, config/build.yaml, config/deploy.yaml, config/test.yaml
 
-## 🤖 CI/CD Integration
+---
 
-### GitHub Actions
+## 🤖 Integração CI/CD / CI/CD integration
+
+GitHub Actions (trecho) / snippet:
 ```yaml
-# .github/workflows/analytics-service.yml
 name: Analytics Service CI/CD
-
 on:
   push:
     branches: [main, develop]
   pull_request:
     branches: [main]
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -223,7 +160,6 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run Tests
         run: ./cmd/analytics-service/scripts/test.sh
-      
   build:
     needs: test
     runs-on: ubuntu-latest
@@ -235,115 +171,84 @@ jobs:
         run: ./cmd/analytics-service/scripts/docker-build.sh
 ```
 
-### Jenkins Pipeline
+Jenkins (trecho) / snippet:
 ```groovy
 pipeline {
-    agent any
-    
-    stages {
-        stage('Test') {
-            steps {
-                sh './cmd/analytics-service/scripts/test.sh'
-            }
-        }
-        
-        stage('Build') {
-            steps {
-                sh './cmd/analytics-service/scripts/build.sh'
-                sh './cmd/analytics-service/scripts/docker-build.sh'
-            }
-        }
-        
-        stage('Deploy') {
-            when {
-                branch 'main'
-            }
-            steps {
-                sh './cmd/analytics-service/scripts/deploy.sh prod'
-            }
-        }
-    }
+  agent any
+  stages {
+    stage('Test') { steps { sh './cmd/analytics-service/scripts/test.sh' } }
+    stage('Build') { steps { sh './cmd/analytics-service/scripts/build.sh'; sh './cmd/analytics-service/scripts/docker-build.sh' } }
+    stage('Deploy') { when { branch 'main' } steps { sh './cmd/analytics-service/scripts/deploy.sh prod' } }
+  }
 }
 ```
 
-## 🐛 Troubleshooting
-
-### Common Issues
-
-#### Permission Denied
-```bash
-# Make scripts executable
-chmod +x scripts/*.sh
-
-# Or make all at once
-find scripts/ -name "*.sh" -exec chmod +x {} \;
-```
-
-#### Missing Dependencies
-```bash
-# Install required tools
-./scripts/deps.sh
-
-# Check system requirements
-./scripts/health-check.sh --prereq
-```
-
-#### Build Failures
-```bash
-# Clean build cache
-./scripts/clean.sh
-
-# Rebuild dependencies
-go mod download
-go mod tidy
-
-# Run build with debug info
-./scripts/build.sh --debug
-```
-
-### Debug Mode
-Most scripts support debug mode for troubleshooting:
-
-```bash
-# Enable debug output
-DEBUG=1 ./scripts/build.sh
-
-# Or use the debug flag
-./scripts/build.sh --debug
-```
-
-## 📚 Best Practices
-
-### Script Development
-1. **Use set -e**: Exit on error
-2. **Use set -u**: Exit on undefined variables
-3. **Use set -o pipefail**: Exit on pipe failures
-4. **Add help documentation**: Include --help flag
-5. **Validate prerequisites**: Check required tools and permissions
-6. **Use logging**: Provide clear output and error messages
-
-### Security Considerations
-1. **Validate inputs**: Sanitize all user inputs
-2. **Use secure defaults**: Fail securely when possible
-3. **Avoid hardcoded secrets**: Use environment variables
-4. **Audit script permissions**: Minimal required permissions
-5. **Log security events**: Track sensitive operations
-
-### Maintenance
-1. **Version your scripts**: Use semantic versioning
-2. **Test regularly**: Include scripts in CI/CD testing
-3. **Document changes**: Maintain changelog
-4. **Monitor usage**: Track script performance and errors
-5. **Update dependencies**: Keep tools and dependencies current
-
-## 🔍 Related Resources
-
-- **[Analytics Service](../README.md)** - Main service documentation
-- **[API Reference](../api/v1/README.md)** - REST API endpoints
-- **[Deployment Guides](../deployments/)** - Docker and Kubernetes setup
-- **[Technical Documentation](../docs/README.md)** - Comprehensive technical reference
-- **[Main Project](../../../README.md)** - Complete system overview
+Dicas / Tips:
+- PT: Use matrizes (matrix) para múltiplas plataformas; armazene DOCKER_REGISTRY/DOCKER_TOKEN como secrets; gere SBOM (syft) e varredura (grype).
+- EN: Use matrix builds; store DOCKER_REGISTRY/DOCKER_TOKEN as secrets; generate SBOM (syft) and scan (grype).
 
 ---
 
-**Part of the [Analytics Service](../README.md) | [Go Data API Microservices](../../../README.md) ecosystem**
+## ✅ Boas práticas / Best practices
+- set -e, set -u, set -o pipefail
+- Flags --help e validação de inputs
+- Sem segredos hardcoded; use variáveis de ambiente/secret manager
+- Logs claros e timestamps; níveis de log
+- Idempotência: reentrância segura nos scripts
+- Checks de pré-requisito (docker, kubectl, go)
+
+Segurança / Security:
+- Sanitizar entradas, princípio do menor privilégio, não expor tokens em logs
+
+Observabilidade / Observability:
+- Coletar métricas, logs estruturados, códigos de retorno consistentes
+
+---
+
+## 🐛 Troubleshooting
+
+Permissão negada / Permission denied:
+```bash
+chmod +x scripts/*.sh
+find scripts/ -name "*.sh" -exec chmod +x {} \;
+```
+
+Dependências ausentes / Missing dependencies:
+```bash
+./scripts/deps.sh
+./scripts/health-check.sh --prereq
+```
+
+Falhas de build / Build failures:
+```bash
+./scripts/clean.sh
+go mod download && go mod tidy
+./scripts/build.sh --debug
+```
+
+Deploy falhou / Deploy failed:
+```bash
+./scripts/logs.sh --since=1h
+./scripts/rollback.sh --to=$PREV_TAG
+```
+
+Banco de dados / Database:
+```bash
+./scripts/backup.sh --output backup_$(date +%F).sql
+./scripts/restore.sh --input backup.sql
+```
+
+---
+
+## 🛠️ Manutenção / Maintenance
+- Versionar scripts (semver) e manter CHANGELOG
+- Testes em CI para cada alteração de script
+- Atualizar dependências periodicamente
+- Monitorar duração dos jobs e otimizar cache
+
+---
+
+## 👤 Créditos / Credits
+- Autor/Author: Gabriel Demetrios Lafis
+- Parte do ecossistema Go Data API Microservices / Part of the Go Data API Microservices ecosystem
+- Feedback e melhorias são bem-vindos! / Feedback and improvements are welcome!
