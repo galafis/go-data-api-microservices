@@ -11,10 +11,10 @@ This README is designed for rapid onboarding, with practical examples, summary t
 - Variáveis de ambiente / Environment variables
 - Integração CI/CD / CI/CD integration
 - Boas práticas / Best practices
+- Segurança de Scripts / Script Security
 - Troubleshooting / Troubleshooting
 - Manutenção / Maintenance
 - Créditos / Credits
-- ETL: Exemplos Práticos e Visuais / ETL: Practical and Visual Examples
 ---
 ## 🧭 Visão Geral / Overview
 - PT: Scripts de automação para desenvolvimento, testes, build, deploy, banco de dados e manutenção do Analytics Service.
@@ -44,7 +44,8 @@ This README is designed for rapid onboarding, with practical examples, summary t
 | Monitoring & Ops | logs.sh | Coleta/análise de logs | Log collection/analysis |
 | Monitoring & Ops | metrics.sh | Coleta de métricas | Metrics collection |
 | Monitoring & Ops | cleanup.sh | Limpeza de manutenção | Maintenance cleanup |
-
+> Dica/Tip: Todos os scripts aceitam --help quando disponível. Many scripts support --help.
+---
 ## 🏗️ Como usar por ambiente / Environment-based usage
 - Desenvolvimento / Development:
   - PT: Rodar deps, testes e servidor de desenvolvimento.
@@ -67,13 +68,12 @@ This README is designed for rapid onboarding, with practical examples, summary t
     - ./scripts/test.sh
     - ./scripts/build.sh --version=$TAG
     - ./scripts/deploy.sh prod --confirm
-
 Rollback:
 - PT: Reverter rapidamente em caso de falha.
 - EN: Quick revert on failure.
 - bash:
   - ./scripts/rollback.sh --to=$PREV_TAG
-
+---
 ## 🧪 Exemplos práticos / Practical examples
 - Build multiplataforma / Cross-platform build:
   - ./scripts/build.sh --os=linux --arch=amd64 --version=v1.2.3
@@ -87,11 +87,10 @@ Rollback:
 - Debug detalhado / Verbose debug:
   - DEBUG=1 ./scripts/build.sh
   - ./scripts/build.sh --debug
-
+---
 ## ⚙️ Variáveis de ambiente / Environment variables
 Exemplo / Example:
-
-```bash
+```
 # Service
 export ANALYTICS_ENV="development"
 export ANALYTICS_PORT="8083"
@@ -111,14 +110,12 @@ export DOCKER_TAG="latest"
 export KUBECONFIG="~/.kube/config"
 export K8S_NAMESPACE="analytics"
 ```
-
 Arquivos de config / Config files:
 - .env.scripts, config/build.yaml, config/deploy.yaml, config/test.yaml
-
+---
 ## 🤖 Integração CI/CD / CI/CD integration
 GitHub Actions (trecho) / snippet:
-
-```yaml
+```
 name: Analytics Service CI/CD
 on:
   push:
@@ -142,10 +139,8 @@ jobs:
       - name: Build Docker Image
         run: ./cmd/analytics-service/scripts/docker-build.sh
 ```
-
 Jenkins (trecho) / snippet:
-
-```groovy
+```
 pipeline {
   agent any
   stages {
@@ -155,11 +150,10 @@ pipeline {
   }
 }
 ```
-
 Dicas / Tips:
 - PT: Use matrizes (matrix) para múltiplas plataformas; armazene DOCKER_REGISTRY/DOCKER_TOKEN como secrets; gere SBOM (syft) e varredura (grype).
 - EN: Use matrix builds; store DOCKER_REGISTRY/DOCKER_TOKEN as secrets; generate SBOM (syft) and scan (grype).
-
+---
 ## ✅ Boas práticas / Best practices
 - set -e, set -u, set -o pipefail
 - Flags --help e validação de inputs
@@ -168,210 +162,155 @@ Dicas / Tips:
 - Idempotência: reentrância segura nos scripts
 - Checks de pré-requisito (docker, kubectl, go)
 
-Segurança / Security:
-- Sanitizar entradas, princípio do menor privilégio, não expor tokens em logs
+---
+## 🔒 Segurança de Scripts / Script Security
+PT: Diretrizes práticas para proteger scripts de automação. EN: Practical guidelines to secure automation scripts.
 
-Observabilidade / Observability:
-- Coletar métricas, logs estruturados, códigos de retorno consistentes
+1) Sanitização de entradas / Input sanitization
+- PT: Nunca executar entradas sem validação; use whitelist de flags/valores e regex. 
+- EN: Never execute unvalidated input; use whitelist of flags/values and regex.
+Exemplo (bash seguro / safe bash):
+```bash
+set -euo pipefail
 
+ALLOWED_ENVS="dev|staging|prod"
+ENVIRONMENT="${1:-dev}"
+if ! [[ "$ENVIRONMENT" =~ ^(${ALLOWED_ENVS})$ ]]; then
+  echo "[ERR] invalid env: $ENVIRONMENT" >&2; exit 2
+fi
+
+# sanitize numeric
+CONCURRENCY="${CONCURRENCY:-4}"
+if ! [[ "$CONCURRENCY" =~ ^[0-9]{1,2}$ ]]; then
+  echo "[ERR] invalid concurrency" >&2; exit 2
+fi
+```
+
+2) Variáveis de ambiente seguras / Secure environment variables
+- PT: Carregue de .env.scripts com set -a; nunca echo segredos; redija logs. 
+- EN: Load from .env.scripts using set -a; never echo secrets; redact logs.
+Exemplo:
+```bash
+set -euo pipefail
+# load env safely
+if [[ -f .env.scripts ]]; then set -a; source .env.scripts; set +a; fi
+
+# redact secrets in logs
+log_redact() { sed -E "s/(${DB_PASS}|${API_TOKEN})/[REDACTED]/g"; }
+
+# usage example
+some_command --token "$API_TOKEN" 2>&1 | log_redact
+```
+
+3) Proteção contra comandos perigosos / Guard against dangerous commands
+- PT: Use set -o noclobber; proteja rm, sed, find com checagens de path. 
+- EN: Use set -o noclobber; guard rm, sed, find with path checks.
+Exemplo safe-rm:
+```bash
+safe_rm() {
+  local target="$1"
+  [[ -z "$target" ]] && { echo "empty target" >&2; return 2; }
+  [[ "$target" == "/" || "$target" == "/*" ]] && { echo "refusing to delete root" >&2; return 3; }
+  [[ ! -e "$target" ]] && { echo "not found: $target" >&2; return 4; }
+  rm -rf -- "$target"
+}
+```
+Guard for kubectl context/namespace:
+```bash
+require_k8s() {
+  local ns="${K8S_NAMESPACE:-}"
+  local ctx
+  ctx=$(kubectl config current-context 2>/dev/null || true)
+  [[ -z "$ctx" || -z "$ns" ]] && { echo "k8s context/namespace missing" >&2; exit 2; }
+  echo "Using k8s: context=$ctx ns=$ns"
+}
+```
+
+4) Modo dry-run e confirmação / Dry-run and confirmation
+- PT: Forneça --dry-run e --confirm antes de ações destrutivas. 
+- EN: Provide --dry-run and --confirm before destructive actions.
+Exemplo:
+```bash
+DRY_RUN=0; CONFIRM=0
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run) DRY_RUN=1;;
+    --confirm) CONFIRM=1;;
+  esac
+done
+
+run_or_echo() { [[ $DRY_RUN -eq 1 ]] && echo "+ $*" || eval "$*"; }
+confirm_or_exit() { [[ $CONFIRM -eq 1 ]] || { echo "--confirm required"; exit 3; }; }
+
+confirm_or_exit
+run_or_echo kubectl apply -f deploy.yaml
+```
+
+5) Auditoria de logs / Log auditing
+- PT: Envie logs para arquivo e syslog, retenção rotacionada, checksum (sha256). 
+- EN: Send logs to file and syslog, rotated retention, checksum (sha256).
+Exemplo:
+```bash
+LOG_DIR="./logs"; mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/$(date -u +%F)_deploy.log"
+{
+  date -u +"%FT%TZ"; set -x
+  ./scripts/deploy.sh staging
+} &>"$LOG_FILE"
+sha256sum "$LOG_FILE" >"$LOG_FILE.sha256"
+logger -t analytics-deploy -- "deploy finished: $(tail -n1 "$LOG_FILE")"
+```
+
+6) Checklist de compliance / Compliance checklist
+- PT:
+  - [ ] Segredos via secret manager (GH Secrets, SOPS, Vault)
+  - [ ] SBOM gerado e verificado (syft/grype)
+  - [ ] Imagens assinadas (cosign) e policy (OPA/Gatekeeper)
+  - [ ] Princípio do menor privilégio (IAM/K8s RBAC)
+  - [ ] Artefatos com checksum/assinatura (sha256/cosign)
+  - [ ] Backups e testes de restore regulares
+  - [ ] Logs com request_id e redacted
+- EN:
+  - [ ] Secrets via secret manager (GH Secrets, SOPS, Vault)
+  - [ ] SBOM generated and scanned (syft/grype)
+  - [ ] Images signed (cosign) and policy (OPA/Gatekeeper)
+  - [ ] Least privilege (IAM/K8s RBAC)
+  - [ ] Artifacts checksummed/signed (sha256/cosign)
+  - [ ] Backups and periodic restore tests
+  - [ ] Logs with request_id and redacted
+
+7) Referências / References
+- OWASP Cheatsheets: https://cheatsheetseries.owasp.org/
+- OWASP Top 10: https://owasp.org/www-project-top-ten/
+- CIS Benchmarks: https://www.cisecurity.org/cis-benchmarks
+- Shell Script Security: https://github.com/koalaman/shellcheck/wiki/ShellCheck
+
+---
 ## 🐛 Troubleshooting
-Permissão negada / Permission denied:
-
-```bash
-chmod +x scripts/*.sh
-find scripts/ -name "*.sh" -exec chmod +x {} \;
-```
-
-Dependências ausentes / Missing dependencies:
-
-```bash
-./scripts/deps.sh
-./scripts/health-check.sh --prereq
-```
-
-Falhas de build / Build failures:
-
-```bash
-./scripts/clean.sh
-go mod download && go mod tidy
-./scripts/build.sh --debug
-```
-
-Deploy falhou / Deploy failed:
-
-```bash
-./scripts/logs.sh --since=1h
-./scripts/rollback.sh --to=$PREV_TAG
-```
-
-Banco de dados / Database:
-
-```bash
-./scripts/backup.sh --output backup_$(date +%F).sql
-./scripts/restore.sh --input backup.sql
-```
-
+- Permissão negada / Permission denied:
+  - chmod +x scripts/*.sh
+  - find scripts/ -name "*.sh" -exec chmod +x {} \;
+- Dependências ausentes / Missing dependencies:
+  - ./scripts/deps.sh
+  - ./scripts/health-check.sh --prereq
+- Falhas de build / Build failures:
+  - ./scripts/clean.sh
+  - go mod download && go mod tidy
+  - ./scripts/build.sh --debug
+- Deploy falhou / Deploy failed:
+  - ./scripts/logs.sh --since=1h
+  - ./scripts/rollback.sh --to=$PREV_TAG
+- Banco de dados / Database:
+  - ./scripts/backup.sh --output backup_$(date +%F).sql
+  - ./scripts/restore.sh --input backup.sql
+---
 ## 🛠️ Manutenção / Maintenance
 - Versionar scripts (semver) e manter CHANGELOG
 - Testes em CI para cada alteração de script
 - Atualizar dependências periodicamente
 - Monitorar duração dos jobs e otimizar cache
-
+---
 ## 👤 Créditos / Credits
 - Autor/Author: Gabriel Demetrios Lafis
 - Parte do ecossistema Go Data API Microservices / Part of the Go Data API Microservices ecosystem
 - Feedback e melhorias são bem-vindos! / Feedback and improvements are welcome!
-
----
-## 🧱 ETL: Exemplos Práticos e Visuais / ETL: Practical and Visual Examples
-
-Este bloco acrescenta exemplos didáticos de pipeline ETL usando o script test_analytics_etl.sh, incluindo: automação com parâmetros, mock de variáveis de ambiente, outputs simulados, e instruções de logs/monitoramento. Seção separada em dois blocos: exemplos de execução e exemplos visuais para copy-paste.
-
-This section adds educational ETL pipeline examples using test_analytics_etl.sh, including: parameterized automation, environment variable mocks, simulated outputs, and logging/monitoring guidance. Split into two blocks: runnable examples and visual copy-paste snippets.
-
-### 1) Execução guiada / Guided execution
-
-```bash
-# PT: Executa ETL completo com parâmetros de data e modo verbose
-# EN: Run full ETL with date parameters and verbose mode
-./cmd/analytics-service/scripts/test_analytics_etl.sh \
-  --source=s3://raw-bucket/daily/ \
-  --target=postgresql://$DB_USER@${DB_HOST}:${DB_PORT}/${DB_NAME} \
-  --date=$(date -u +%F) \
-  --stages=extract,transform,load \
-  --concurrency=4 \
-  --verbose
-```
-
-```bash
-# PT: Executa apenas transformação e carga, filtrando partição
-# EN: Run only transform and load, filtering a partition
-./cmd/analytics-service/scripts/test_analytics_etl.sh \
-  --stages=transform,load \
-  --partition=dt=2025-09-24/region=BR \
-  --fail-fast
-```
-
-```bash
-# PT: Execução dry-run para validar dependências e plano de execução
-# EN: Dry-run to validate dependencies and execution plan
-./cmd/analytics-service/scripts/test_analytics_etl.sh --dry-run --plan --verbose
-```
-
-### 2) Mock de variáveis de ambiente / Environment variable mocks
-
-```bash
-# PT: Mock controlado para rodar localmente sem tocar em serviços reais
-# EN: Controlled mock to run locally without touching real services
-export ETL_MOCK_MODE=true
-export ANALYTICS_ENV="test"
-export DB_HOST="127.0.0.1"
-export DB_PORT="5432"
-export DB_NAME="analytics_test"
-export DB_USER="analytics_user"
-export S3_ENDPOINT="http://localhost:4566"   # localstack
-export AWS_ACCESS_KEY_ID="test"
-export AWS_SECRET_ACCESS_KEY="test"
-
-./cmd/analytics-service/scripts/test_analytics_etl.sh \
-  --source=s3://mock-raw/daily/ \
-  --target=postgresql://$DB_USER@${DB_HOST}:${DB_PORT}/${DB_NAME} \
-  --stages=extract,transform,load \
-  --verbose
-```
-
-Dicas / Tips:
-- PT: Combine ETL_MOCK_MODE com fixtures em ./testdata/ para entradas determinísticas.
-- EN: Combine ETL_MOCK_MODE with ./testdata/ fixtures for deterministic inputs.
-
-### 3) Outputs simulados / Simulated outputs
-
-```text
-[2025-09-24T10:00:00Z] [INFO] ETL start {date="2025-09-24", stages=[extract,transform,load]}
-[2025-09-24T10:00:02Z] [INFO] extract: 24 files discovered, 24 queued
-[2025-09-24T10:00:07Z] [INFO] transform: 24 -> 24 records normalized (schema v3)
-[2025-09-24T10:00:09Z] [INFO] load: batch=8, inserted=24, updated=0, upsert_key="event_id"
-[2025-09-24T10:00:10Z] [METRIC] etl_duration_seconds=10.2 stage="all"
-[2025-09-24T10:00:10Z] [METRIC] etl_records_total=24 labels={stage="load"}
-[2025-09-24T10:00:10Z] [INFO] ETL success ✔
-```
-
-Falhas comuns / Common failures:
-
-```text
-[ERROR] extract: S3 403 AccessDenied (verifique credenciais / check credentials)
-[WARN ] transform: 3 records dropped by validation (schema mismatch)
-[ERROR] load: failed pq: relation "events" does not exist (rodar migrate.sh)
-```
-
-### 4) Logs e monitoramento / Logging and monitoring
-
-- PT: Os scripts emitem logs estruturados (JSON opcional via LOG_FORMAT=json). Use logs.sh para coleta e filtros por estágio.
-- EN: Scripts emit structured logs (JSON optional via LOG_FORMAT=json). Use logs.sh for collection and stage filters.
-
-Exemplos / Examples:
-
-```bash
-# PT: Seguir logs da última execução ETL
-# EN: Tail logs of the last ETL run
-./cmd/analytics-service/scripts/logs.sh --component=etl --since=2h --follow
-```
-
-```bash
-# PT: Exportar métricas para Prometheus via textfile collector
-# EN: Export metrics to Prometheus via textfile collector
-./cmd/analytics-service/scripts/metrics.sh --component=etl --output=/var/lib/node_exporter/textfile/etl.prom
-```
-
-Boas práticas / Best practices:
-- PT: Inclua request_id/trace_id em cada estágio; log de progresso a cada N registros; nunca logar dados sensíveis.
-- EN: Include request_id/trace_id per stage; progress logging every N records; never log sensitive data.
-
-Alertas e SLAs / Alerts and SLAs:
-- PT: Configure alertas para etl_duration_seconds alto e taxa de erro por estágio (>1%).
-- EN: Configure alerts for high etl_duration_seconds and per-stage error rate (>1%).
-
----
-## 🧩 Exemplos visuais (copy-paste) / Visual examples (copy-paste)
-
-Copie e cole conforme necessário para seu caso de uso.
-Copy and paste as needed for your use case.
-
-```bash
-# FULL RUN
-./cmd/analytics-service/scripts/test_analytics_etl.sh \
-  --source=s3://raw-bucket/daily/ \
-  --target=postgresql://$DB_USER@${DB_HOST}:${DB_PORT}/${DB_NAME} \
-  --date=$(date -u +%F) \
-  --stages=extract,transform,load \
-  --concurrency=4 \
-  --verbose
-```
-
-```bash
-# PARTIAL RUN (TRANSFORM+LOAD)
-./cmd/analytics-service/scripts/test_analytics_etl.sh \
-  --stages=transform,load \
-  --partition=dt=2025-09-24/region=BR \
-  --fail-fast
-```
-
-```bash
-# DRY RUN + PLAN
-./cmd/analytics-service/scripts/test_analytics_etl.sh --dry-run --plan --verbose
-```
-
-```bash
-# MOCKED ENV
-export ETL_MOCK_MODE=true
-export ANALYTICS_ENV="test"
-export DB_HOST="127.0.0.1"; export DB_PORT="5432"; export DB_NAME="analytics_test"; export DB_USER="analytics_user"
-export S3_ENDPOINT="http://localhost:4566"; export AWS_ACCESS_KEY_ID="test"; export AWS_SECRET_ACCESS_KEY="test"
-./cmd/analytics-service/scripts/test_analytics_etl.sh --stages=extract,transform,load --verbose \
-  --source=s3://mock-raw/daily/ \
-  --target=postgresql://$DB_USER@${DB_HOST}:${DB_PORT}/${DB_NAME}
-```
-
-```bash
-# LOGS + METRICS
-./cmd/analytics-service/scripts/logs.sh --component=etl --since=2
