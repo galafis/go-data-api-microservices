@@ -1,13 +1,8 @@
 # 📦 Analytics Service Scripts — Guia Rápido / Quick Start
-
 Autor/Author: Gabriel Demetrios Lafis
-
 Este README foi projetado para onboarding rápido, com exemplos práticos, tabelas resumidas, dicas de CI/CD, troubleshooting e boas práticas. Versão bilíngue: Português e Inglês, lado a lado quando aplicável.
-
 This README is designed for rapid onboarding, with practical examples, summary tables, CI/CD tips, troubleshooting, and best practices. Bilingual: Portuguese and English, side-by-side when applicable.
-
 ---
-
 ## 🔗 Índice / Table of Contents
 - Visão Geral / Overview
 - Tabela de Scripts / Scripts Matrix
@@ -19,17 +14,13 @@ This README is designed for rapid onboarding, with practical examples, summary t
 - Troubleshooting / Troubleshooting
 - Manutenção / Maintenance
 - Créditos / Credits
-
+- ETL: Exemplos Práticos e Visuais / ETL: Practical and Visual Examples
 ---
-
 ## 🧭 Visão Geral / Overview
 - PT: Scripts de automação para desenvolvimento, testes, build, deploy, banco de dados e manutenção do Analytics Service.
 - EN: Automation scripts for development, testing, build, deployment, database, and maintenance for the Analytics Service.
-
 ---
-
 ## 📚 Tabela de Scripts / Scripts Matrix
-
 | Categoria / Category | Script | Descrição (PT) | Description (EN) |
 |---|---|---|---|
 | Build & Dev | build.sh | Compila o serviço com otimizações | Builds service with optimizations |
@@ -54,12 +45,7 @@ This README is designed for rapid onboarding, with practical examples, summary t
 | Monitoring & Ops | metrics.sh | Coleta de métricas | Metrics collection |
 | Monitoring & Ops | cleanup.sh | Limpeza de manutenção | Maintenance cleanup |
 
-Dica/Tip: Todos os scripts aceitam --help quando disponível. Many scripts support --help.
-
----
-
 ## 🏗️ Como usar por ambiente / Environment-based usage
-
 - Desenvolvimento / Development:
   - PT: Rodar deps, testes e servidor de desenvolvimento.
   - EN: Run deps, tests, and development server.
@@ -67,7 +53,6 @@ Dica/Tip: Todos os scripts aceitam --help quando disponível. Many scripts suppo
     - ./scripts/deps.sh
     - ./scripts/test.sh --verbose
     - ./scripts/dev.sh
-
 - Staging:
   - PT: Build, imagem Docker e deploy em staging.
   - EN: Build, Docker image, and deploy to staging.
@@ -75,7 +60,6 @@ Dica/Tip: Todos os scripts aceitam --help quando disponível. Many scripts suppo
     - ./scripts/build.sh --version=$(git rev-parse --short HEAD)
     - ./scripts/docker-build.sh
     - ./scripts/deploy.sh staging
-
 - Produção / Production:
   - PT: Confirmar e registrar rollout.
   - EN: Confirm and record rollout.
@@ -90,31 +74,21 @@ Rollback:
 - bash:
   - ./scripts/rollback.sh --to=$PREV_TAG
 
----
-
 ## 🧪 Exemplos práticos / Practical examples
-
-Build multiplataforma / Cross-platform build:
-- ./scripts/build.sh --os=linux --arch=amd64 --version=v1.2.3
-
-Testes com cobertura HTML / HTML coverage:
-- ./scripts/test.sh --html-coverage
-
-Migrações / Migrations:
-- ./scripts/migrate.sh up
-- ./scripts/migrate.sh create add_user_preferences
-
-Health check pré-deploy / Pre-deploy health check:
-- ./scripts/health-check.sh --prereq
-
-Debug detalhado / Verbose debug:
-- DEBUG=1 ./scripts/build.sh
-- ./scripts/build.sh --debug
-
----
+- Build multiplataforma / Cross-platform build:
+  - ./scripts/build.sh --os=linux --arch=amd64 --version=v1.2.3
+- Testes com cobertura HTML / HTML coverage:
+  - ./scripts/test.sh --html-coverage
+- Migrações / Migrations:
+  - ./scripts/migrate.sh up
+  - ./scripts/migrate.sh create add_user_preferences
+- Health check pré-deploy / Pre-deploy health check:
+  - ./scripts/health-check.sh --prereq
+- Debug detalhado / Verbose debug:
+  - DEBUG=1 ./scripts/build.sh
+  - ./scripts/build.sh --debug
 
 ## ⚙️ Variáveis de ambiente / Environment variables
-
 Exemplo / Example:
 
 ```bash
@@ -141,11 +115,9 @@ export K8S_NAMESPACE="analytics"
 Arquivos de config / Config files:
 - .env.scripts, config/build.yaml, config/deploy.yaml, config/test.yaml
 
----
-
 ## 🤖 Integração CI/CD / CI/CD integration
-
 GitHub Actions (trecho) / snippet:
+
 ```yaml
 name: Analytics Service CI/CD
 on:
@@ -172,6 +144,7 @@ jobs:
 ```
 
 Jenkins (trecho) / snippet:
+
 ```groovy
 pipeline {
   agent any
@@ -187,8 +160,6 @@ Dicas / Tips:
 - PT: Use matrizes (matrix) para múltiplas plataformas; armazene DOCKER_REGISTRY/DOCKER_TOKEN como secrets; gere SBOM (syft) e varredura (grype).
 - EN: Use matrix builds; store DOCKER_REGISTRY/DOCKER_TOKEN as secrets; generate SBOM (syft) and scan (grype).
 
----
-
 ## ✅ Boas práticas / Best practices
 - set -e, set -u, set -o pipefail
 - Flags --help e validação de inputs
@@ -203,23 +174,23 @@ Segurança / Security:
 Observabilidade / Observability:
 - Coletar métricas, logs estruturados, códigos de retorno consistentes
 
----
-
 ## 🐛 Troubleshooting
-
 Permissão negada / Permission denied:
+
 ```bash
 chmod +x scripts/*.sh
 find scripts/ -name "*.sh" -exec chmod +x {} \;
 ```
 
 Dependências ausentes / Missing dependencies:
+
 ```bash
 ./scripts/deps.sh
 ./scripts/health-check.sh --prereq
 ```
 
 Falhas de build / Build failures:
+
 ```bash
 ./scripts/clean.sh
 go mod download && go mod tidy
@@ -227,18 +198,18 @@ go mod download && go mod tidy
 ```
 
 Deploy falhou / Deploy failed:
+
 ```bash
 ./scripts/logs.sh --since=1h
 ./scripts/rollback.sh --to=$PREV_TAG
 ```
 
 Banco de dados / Database:
+
 ```bash
 ./scripts/backup.sh --output backup_$(date +%F).sql
 ./scripts/restore.sh --input backup.sql
 ```
-
----
 
 ## 🛠️ Manutenção / Maintenance
 - Versionar scripts (semver) e manter CHANGELOG
@@ -246,9 +217,161 @@ Banco de dados / Database:
 - Atualizar dependências periodicamente
 - Monitorar duração dos jobs e otimizar cache
 
----
-
 ## 👤 Créditos / Credits
 - Autor/Author: Gabriel Demetrios Lafis
 - Parte do ecossistema Go Data API Microservices / Part of the Go Data API Microservices ecosystem
 - Feedback e melhorias são bem-vindos! / Feedback and improvements are welcome!
+
+---
+## 🧱 ETL: Exemplos Práticos e Visuais / ETL: Practical and Visual Examples
+
+Este bloco acrescenta exemplos didáticos de pipeline ETL usando o script test_analytics_etl.sh, incluindo: automação com parâmetros, mock de variáveis de ambiente, outputs simulados, e instruções de logs/monitoramento. Seção separada em dois blocos: exemplos de execução e exemplos visuais para copy-paste.
+
+This section adds educational ETL pipeline examples using test_analytics_etl.sh, including: parameterized automation, environment variable mocks, simulated outputs, and logging/monitoring guidance. Split into two blocks: runnable examples and visual copy-paste snippets.
+
+### 1) Execução guiada / Guided execution
+
+```bash
+# PT: Executa ETL completo com parâmetros de data e modo verbose
+# EN: Run full ETL with date parameters and verbose mode
+./cmd/analytics-service/scripts/test_analytics_etl.sh \
+  --source=s3://raw-bucket/daily/ \
+  --target=postgresql://$DB_USER@${DB_HOST}:${DB_PORT}/${DB_NAME} \
+  --date=$(date -u +%F) \
+  --stages=extract,transform,load \
+  --concurrency=4 \
+  --verbose
+```
+
+```bash
+# PT: Executa apenas transformação e carga, filtrando partição
+# EN: Run only transform and load, filtering a partition
+./cmd/analytics-service/scripts/test_analytics_etl.sh \
+  --stages=transform,load \
+  --partition=dt=2025-09-24/region=BR \
+  --fail-fast
+```
+
+```bash
+# PT: Execução dry-run para validar dependências e plano de execução
+# EN: Dry-run to validate dependencies and execution plan
+./cmd/analytics-service/scripts/test_analytics_etl.sh --dry-run --plan --verbose
+```
+
+### 2) Mock de variáveis de ambiente / Environment variable mocks
+
+```bash
+# PT: Mock controlado para rodar localmente sem tocar em serviços reais
+# EN: Controlled mock to run locally without touching real services
+export ETL_MOCK_MODE=true
+export ANALYTICS_ENV="test"
+export DB_HOST="127.0.0.1"
+export DB_PORT="5432"
+export DB_NAME="analytics_test"
+export DB_USER="analytics_user"
+export S3_ENDPOINT="http://localhost:4566"   # localstack
+export AWS_ACCESS_KEY_ID="test"
+export AWS_SECRET_ACCESS_KEY="test"
+
+./cmd/analytics-service/scripts/test_analytics_etl.sh \
+  --source=s3://mock-raw/daily/ \
+  --target=postgresql://$DB_USER@${DB_HOST}:${DB_PORT}/${DB_NAME} \
+  --stages=extract,transform,load \
+  --verbose
+```
+
+Dicas / Tips:
+- PT: Combine ETL_MOCK_MODE com fixtures em ./testdata/ para entradas determinísticas.
+- EN: Combine ETL_MOCK_MODE with ./testdata/ fixtures for deterministic inputs.
+
+### 3) Outputs simulados / Simulated outputs
+
+```text
+[2025-09-24T10:00:00Z] [INFO] ETL start {date="2025-09-24", stages=[extract,transform,load]}
+[2025-09-24T10:00:02Z] [INFO] extract: 24 files discovered, 24 queued
+[2025-09-24T10:00:07Z] [INFO] transform: 24 -> 24 records normalized (schema v3)
+[2025-09-24T10:00:09Z] [INFO] load: batch=8, inserted=24, updated=0, upsert_key="event_id"
+[2025-09-24T10:00:10Z] [METRIC] etl_duration_seconds=10.2 stage="all"
+[2025-09-24T10:00:10Z] [METRIC] etl_records_total=24 labels={stage="load"}
+[2025-09-24T10:00:10Z] [INFO] ETL success ✔
+```
+
+Falhas comuns / Common failures:
+
+```text
+[ERROR] extract: S3 403 AccessDenied (verifique credenciais / check credentials)
+[WARN ] transform: 3 records dropped by validation (schema mismatch)
+[ERROR] load: failed pq: relation "events" does not exist (rodar migrate.sh)
+```
+
+### 4) Logs e monitoramento / Logging and monitoring
+
+- PT: Os scripts emitem logs estruturados (JSON opcional via LOG_FORMAT=json). Use logs.sh para coleta e filtros por estágio.
+- EN: Scripts emit structured logs (JSON optional via LOG_FORMAT=json). Use logs.sh for collection and stage filters.
+
+Exemplos / Examples:
+
+```bash
+# PT: Seguir logs da última execução ETL
+# EN: Tail logs of the last ETL run
+./cmd/analytics-service/scripts/logs.sh --component=etl --since=2h --follow
+```
+
+```bash
+# PT: Exportar métricas para Prometheus via textfile collector
+# EN: Export metrics to Prometheus via textfile collector
+./cmd/analytics-service/scripts/metrics.sh --component=etl --output=/var/lib/node_exporter/textfile/etl.prom
+```
+
+Boas práticas / Best practices:
+- PT: Inclua request_id/trace_id em cada estágio; log de progresso a cada N registros; nunca logar dados sensíveis.
+- EN: Include request_id/trace_id per stage; progress logging every N records; never log sensitive data.
+
+Alertas e SLAs / Alerts and SLAs:
+- PT: Configure alertas para etl_duration_seconds alto e taxa de erro por estágio (>1%).
+- EN: Configure alerts for high etl_duration_seconds and per-stage error rate (>1%).
+
+---
+## 🧩 Exemplos visuais (copy-paste) / Visual examples (copy-paste)
+
+Copie e cole conforme necessário para seu caso de uso.
+Copy and paste as needed for your use case.
+
+```bash
+# FULL RUN
+./cmd/analytics-service/scripts/test_analytics_etl.sh \
+  --source=s3://raw-bucket/daily/ \
+  --target=postgresql://$DB_USER@${DB_HOST}:${DB_PORT}/${DB_NAME} \
+  --date=$(date -u +%F) \
+  --stages=extract,transform,load \
+  --concurrency=4 \
+  --verbose
+```
+
+```bash
+# PARTIAL RUN (TRANSFORM+LOAD)
+./cmd/analytics-service/scripts/test_analytics_etl.sh \
+  --stages=transform,load \
+  --partition=dt=2025-09-24/region=BR \
+  --fail-fast
+```
+
+```bash
+# DRY RUN + PLAN
+./cmd/analytics-service/scripts/test_analytics_etl.sh --dry-run --plan --verbose
+```
+
+```bash
+# MOCKED ENV
+export ETL_MOCK_MODE=true
+export ANALYTICS_ENV="test"
+export DB_HOST="127.0.0.1"; export DB_PORT="5432"; export DB_NAME="analytics_test"; export DB_USER="analytics_user"
+export S3_ENDPOINT="http://localhost:4566"; export AWS_ACCESS_KEY_ID="test"; export AWS_SECRET_ACCESS_KEY="test"
+./cmd/analytics-service/scripts/test_analytics_etl.sh --stages=extract,transform,load --verbose \
+  --source=s3://mock-raw/daily/ \
+  --target=postgresql://$DB_USER@${DB_HOST}:${DB_PORT}/${DB_NAME}
+```
+
+```bash
+# LOGS + METRICS
+./cmd/analytics-service/scripts/logs.sh --component=etl --since=2
