@@ -1,308 +1,3 @@
-# 📦 Analytics Service Scripts — Guia Rápido / Quick Start
-Autor/Author: Gabriel Demetrios Lafis
-Este README foi projetado para onboarding rápido, com exemplos práticos, tabelas resumidas, dicas de CI/CD, troubleshooting e boas práticas. Versão bilíngue: Português e Inglês, lado a lado quando aplicável.
-This README is designed for rapid onboarding, with practical examples, summary tables, CI/CD tips, troubleshooting, and best practices. Bilingual: Portuguese and English, side-by-side when applicable.
----
-## 🔗 Índice / Table of Contents
-- Visão Geral / Overview
-- Tabela de Scripts / Scripts Matrix
-- Como usar por ambiente / Environment-based usage
-- Exemplos práticos / Practical examples
-- Variáveis de ambiente / Environment variables
-- Integração CI/CD / CI/CD integration
-- Boas práticas / Best practices
-- Segurança de Scripts / Script Security
-- Troubleshooting / Troubleshooting
-- Manutenção / Maintenance
-- Créditos / Credits
----
-## 🧭 Visão Geral / Overview
-- PT: Scripts de automação para desenvolvimento, testes, build, deploy, banco de dados e manutenção do Analytics Service.
-- EN: Automation scripts for development, testing, build, deployment, database, and maintenance for the Analytics Service.
----
-## 📚 Tabela de Scripts / Scripts Matrix
-| Categoria / Category | Script | Descrição (PT) | Description (EN) |
-|---|---|---|---|
-| Build & Dev | build.sh | Compila o serviço com otimizações | Builds service with optimizations |
-| Build & Dev | dev.sh | Sobe servidor com hot reload | Starts dev server with hot reload |
-| Build & Dev | clean.sh | Limpa artefatos de build | Cleans build artifacts |
-| Build & Dev | deps.sh | Instala/atualiza dependências | Installs/updates dependencies |
-| Test & Quality | test.sh | Executa suíte completa com cobertura | Runs full test suite with coverage |
-| Test & Quality | test-unit.sh | Executa testes unitários | Runs unit tests |
-| Test & Quality | test-integration.sh | Executa testes de integração | Runs integration tests |
-| Test & Quality | lint.sh | Lint e formatação | Linting and formatting |
-| Test & Quality | security.sh | Scan de vulnerabilidades | Security vulnerability scanning |
-| Deployment | deploy.sh | Deploy automatizado por ambiente | Automated environment deployment |
-| Deployment | docker-build.sh | Build de imagem Docker | Docker image build |
-| Deployment | k8s-deploy.sh | Deploy no Kubernetes | Kubernetes deployment |
-| Deployment | rollback.sh | Rollback de versão | Version rollback |
-| Database & Data | migrate.sh | Migrações de schema | Schema migrations |
-| Database & Data | seed.sh | Seed de dados de teste | Test data seeding |
-| Database & Data | backup.sh | Backup do banco | Database backup |
-| Database & Data | restore.sh | Restore do banco | Database restore |
-| Monitoring & Ops | health-check.sh | Verifica saúde do serviço | Service health check |
-| Monitoring & Ops | logs.sh | Coleta/análise de logs | Log collection/analysis |
-| Monitoring & Ops | metrics.sh | Coleta de métricas | Metrics collection |
-| Monitoring & Ops | cleanup.sh | Limpeza de manutenção | Maintenance cleanup |
-> Dica/Tip: Todos os scripts aceitam --help quando disponível. Many scripts support --help.
----
-## 🏗️ Como usar por ambiente / Environment-based usage
-- Desenvolvimento / Development:
-  - PT: Rodar deps, testes e servidor de desenvolvimento.
-  - EN: Run deps, tests, and development server.
-  - bash:
-    - ./scripts/deps.sh
-    - ./scripts/test.sh --verbose
-    - ./scripts/dev.sh
-- Staging:
-  - PT: Build, imagem Docker e deploy em staging.
-  - EN: Build, Docker image, and deploy to staging.
-  - bash:
-    - ./scripts/build.sh --version=$(git rev-parse --short HEAD)
-    - ./scripts/docker-build.sh
-    - ./scripts/deploy.sh staging
-- Produção / Production:
-  - PT: Confirmar e registrar rollout.
-  - EN: Confirm and record rollout.
-  - bash:
-    - ./scripts/test.sh
-    - ./scripts/build.sh --version=$TAG
-    - ./scripts/deploy.sh prod --confirm
-Rollback:
-- PT: Reverter rapidamente em caso de falha.
-- EN: Quick revert on failure.
-- bash:
-  - ./scripts/rollback.sh --to=$PREV_TAG
----
-## 🧪 Exemplos práticos / Practical examples
-- Build multiplataforma / Cross-platform build:
-  - ./scripts/build.sh --os=linux --arch=amd64 --version=v1.2.3
-- Testes com cobertura HTML / HTML coverage:
-  - ./scripts/test.sh --html-coverage
-- Migrações / Migrations:
-  - ./scripts/migrate.sh up
-  - ./scripts/migrate.sh create add_user_preferences
-- Health check pré-deploy / Pre-deploy health check:
-  - ./scripts/health-check.sh --prereq
-- Debug detalhado / Verbose debug:
-  - DEBUG=1 ./scripts/build.sh
-  - ./scripts/build.sh --debug
----
-## ⚙️ Variáveis de ambiente / Environment variables
-Exemplo / Example:
-```
-# Service
-export ANALYTICS_ENV="development"
-export ANALYTICS_PORT="8083"
-export LOG_LEVEL="info"
-
-# Database
-export DB_HOST="localhost"
-export DB_PORT="5432"
-export DB_NAME="analytics_dev"
-export DB_USER="analytics_user"
-
-# Docker
-export DOCKER_REGISTRY="your-registry.com"
-export DOCKER_TAG="latest"
-
-# Kubernetes
-export KUBECONFIG="~/.kube/config"
-export K8S_NAMESPACE="analytics"
-```
-Arquivos de config / Config files:
-- .env.scripts, config/build.yaml, config/deploy.yaml, config/test.yaml
----
-## 🤖 Integração CI/CD / CI/CD integration
-GitHub Actions (trecho) / snippet:
-```
-name: Analytics Service CI/CD
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run Tests
-        run: ./cmd/analytics-service/scripts/test.sh
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Build Service
-        run: ./cmd/analytics-service/scripts/build.sh
-      - name: Build Docker Image
-        run: ./cmd/analytics-service/scripts/docker-build.sh
-```
-Jenkins (trecho) / snippet:
-```
-pipeline {
-  agent any
-  stages {
-    stage('Test') { steps { sh './cmd/analytics-service/scripts/test.sh' } }
-    stage('Build') { steps { sh './cmd/analytics-service/scripts/build.sh'; sh './cmd/analytics-service/scripts/docker-build.sh' } }
-    stage('Deploy') { when { branch 'main' } steps { sh './cmd/analytics-service/scripts/deploy.sh prod' } }
-  }
-}
-```
-Dicas / Tips:
-- PT: Use matrizes (matrix) para múltiplas plataformas; armazene DOCKER_REGISTRY/DOCKER_TOKEN como secrets; gere SBOM (syft) e varredura (grype).
-- EN: Use matrix builds; store DOCKER_REGISTRY/DOCKER_TOKEN as secrets; generate SBOM (syft) and scan (grype).
----
-## ✅ Boas práticas / Best practices
-- set -e, set -u, set -o pipefail
-- Flags --help e validação de inputs
-- Sem segredos hardcoded; use variáveis de ambiente/secret manager
-- Logs claros e timestamps; níveis de log
-- Idempotência: reentrância segura nos scripts
-- Checks de pré-requisito (docker, kubectl, go)
-
----
-## 🔒 Segurança de Scripts / Script Security
-PT: Diretrizes práticas para proteger scripts de automação. EN: Practical guidelines to secure automation scripts.
-
-1) Sanitização de entradas / Input sanitization
-- PT: Nunca executar entradas sem validação; use whitelist de flags/valores e regex. 
-- EN: Never execute unvalidated input; use whitelist of flags/values and regex.
-Exemplo (bash seguro / safe bash):
-```bash
-set -euo pipefail
-
-ALLOWED_ENVS="dev|staging|prod"
-ENVIRONMENT="${1:-dev}"
-if ! [[ "$ENVIRONMENT" =~ ^(${ALLOWED_ENVS})$ ]]; then
-  echo "[ERR] invalid env: $ENVIRONMENT" >&2; exit 2
-fi
-
-# sanitize numeric
-CONCURRENCY="${CONCURRENCY:-4}"
-if ! [[ "$CONCURRENCY" =~ ^[0-9]{1,2}$ ]]; then
-  echo "[ERR] invalid concurrency" >&2; exit 2
-fi
-```
-
-2) Variáveis de ambiente seguras / Secure environment variables
-- PT: Carregue de .env.scripts com set -a; nunca echo segredos; redija logs. 
-- EN: Load from .env.scripts using set -a; never echo secrets; redact logs.
-Exemplo:
-```bash
-set -euo pipefail
-# load env safely
-if [[ -f .env.scripts ]]; then set -a; source .env.scripts; set +a; fi
-
-# redact secrets in logs
-log_redact() { sed -E "s/(${DB_PASS}|${API_TOKEN})/[REDACTED]/g"; }
-
-# usage example
-some_command --token "$API_TOKEN" 2>&1 | log_redact
-```
-
-3) Proteção contra comandos perigosos / Guard against dangerous commands
-- PT: Use set -o noclobber; proteja rm, sed, find com checagens de path. 
-- EN: Use set -o noclobber; guard rm, sed, find with path checks.
-Exemplo safe-rm:
-```bash
-safe_rm() {
-  local target="$1"
-  [[ -z "$target" ]] && { echo "empty target" >&2; return 2; }
-  [[ "$target" == "/" || "$target" == "/*" ]] && { echo "refusing to delete root" >&2; return 3; }
-  [[ ! -e "$target" ]] && { echo "not found: $target" >&2; return 4; }
-  rm -rf -- "$target"
-}
-```
-Guard for kubectl context/namespace:
-```bash
-require_k8s() {
-  local ns="${K8S_NAMESPACE:-}"
-  local ctx
-  ctx=$(kubectl config current-context 2>/dev/null || true)
-  [[ -z "$ctx" || -z "$ns" ]] && { echo "k8s context/namespace missing" >&2; exit 2; }
-  echo "Using k8s: context=$ctx ns=$ns"
-}
-```
-
-4) Modo dry-run e confirmação / Dry-run and confirmation
-- PT: Forneça --dry-run e --confirm antes de ações destrutivas. 
-- EN: Provide --dry-run and --confirm before destructive actions.
-Exemplo:
-```bash
-DRY_RUN=0; CONFIRM=0
-for arg in "$@"; do
-  case "$arg" in
-    --dry-run) DRY_RUN=1;;
-    --confirm) CONFIRM=1;;
-  esac
-done
-
-run_or_echo() { [[ $DRY_RUN -eq 1 ]] && echo "+ $*" || eval "$*"; }
-confirm_or_exit() { [[ $CONFIRM -eq 1 ]] || { echo "--confirm required"; exit 3; }; }
-
-confirm_or_exit
-run_or_echo kubectl apply -f deploy.yaml
-```
-
-5) Auditoria de logs / Log auditing
-- PT: Envie logs para arquivo e syslog, retenção rotacionada, checksum (sha256). 
-- EN: Send logs to file and syslog, rotated retention, checksum (sha256).
-Exemplo:
-```bash
-LOG_DIR="./logs"; mkdir -p "$LOG_DIR"
-LOG_FILE="$LOG_DIR/$(date -u +%F)_deploy.log"
-{
-  date -u +"%FT%TZ"; set -x
-  ./scripts/deploy.sh staging
-} &>"$LOG_FILE"
-sha256sum "$LOG_FILE" >"$LOG_FILE.sha256"
-logger -t analytics-deploy -- "deploy finished: $(tail -n1 "$LOG_FILE")"
-```
-
-6) Checklist de compliance / Compliance checklist
-- PT:
-  - [ ] Segredos via secret manager (GH Secrets, SOPS, Vault)
-  - [ ] SBOM gerado e verificado (syft/grype)
-  - [ ] Imagens assinadas (cosign) e policy (OPA/Gatekeeper)
-  - [ ] Princípio do menor privilégio (IAM/K8s RBAC)
-  - [ ] Artefatos com checksum/assinatura (sha256/cosign)
-  - [ ] Backups e testes de restore regulares
-  - [ ] Logs com request_id e redacted
-- EN:
-  - [ ] Secrets via secret manager (GH Secrets, SOPS, Vault)
-  - [ ] SBOM generated and scanned (syft/grype)
-  - [ ] Images signed (cosign) and policy (OPA/Gatekeeper)
-  - [ ] Least privilege (IAM/K8s RBAC)
-  - [ ] Artifacts checksummed/signed (sha256/cosign)
-  - [ ] Backups and periodic restore tests
-  - [ ] Logs with request_id and redacted
-
-7) Referências / References
-- OWASP Cheatsheets: https://cheatsheetseries.owasp.org/
-- OWASP Top 10: https://owasp.org/www-project-top-ten/
-- CIS Benchmarks: https://www.cisecurity.org/cis-benchmarks
-- Shell Script Security: https://github.com/koalaman/shellcheck/wiki/ShellCheck
-
----
-## 🐛 Troubleshooting
-- Permissão negada / Permission denied:
-  - chmod +x scripts/*.sh
-  - find scripts/ -name "*.sh" -exec chmod +x {} \;
-- Dependências ausentes / Missing dependencies:
-  - ./scripts/deps.sh
-  - ./scripts/health-check.sh --prereq
-- Falhas de build / Build failures:
-  - ./scripts/clean.sh
-  - go mod download && go mod tidy
-  - ./scripts/build.sh --debug
-- Deploy falhou / Deploy failed:
-  - ./scripts/logs.sh --since=1h
-  - ./scripts/rollback.sh --to=$PREV_TAG
-- Banco de dados / Database:
-  - ./scripts/backup.sh --output backup_$(date +%F).sql
-  - ./scripts/restore.sh --input backup.sql
 ---
 ## 🛠️ Manutenção / Maintenance
 - Versionar scripts (semver) e manter CHANGELOG
@@ -314,3 +9,145 @@ logger -t analytics-deploy -- "deploy finished: $(tail -n1 "$LOG_FILE")"
 - Autor/Author: Gabriel Demetrios Lafis
 - Parte do ecossistema Go Data API Microservices / Part of the Go Data API Microservices ecosystem
 - Feedback e melhorias são bem-vindos! / Feedback and improvements are welcome!
+---
+## 🛡️ Auditoria Periódica / Periodic Auditing
+PT: Diretrizes e exemplos para auditorias mensais/trimestrais de scripts e infraestrutura.
+EN: Guidelines and examples for monthly/quarterly audits of scripts and infrastructure.
+
+1) Checklist de auditoria mensal/trimestral (linhas gerais) / Monthly/Quarterly audit checklist (high-level)
+- PT:
+  - [ ] Revisar mudanças em scripts (git log, diffs, owners) e cobertura de testes
+  - [ ] Rodar linters e análise estática (ShellCheck) e corrigir findings críticos
+  - [ ] Revalidar variáveis sensíveis e escopos (mínimo privilégio) em CI/CD e cloud
+  - [ ] Regerar SBOM e re-escanear imagens/dep. (syft/grype/trivy/snyk)
+  - [ ] Verificar política de assinatura/verificação de imagens (cosign/OPA/Gatekeeper)
+  - [ ] Validar configurações de Docker/K8s (rootless, readOnlyRootFilesystem, seccomp)
+  - [ ] Executar benchmarks e hardening (kube-bench, kube-hunter, CIS Docker)
+  - [ ] Revisar logs/alertas, SLAs de backup/restore e testes de recuperação
+  - [ ] Validar rotação de chaves/tokens e expiração de credenciais
+  - ■ Evidências anexadas no relatório e tickets abertos para pendências
+- EN:
+  - [ ] Review script changes (git log, diffs, owners) and test coverage
+  - [ ] Run linters and static analysis (ShellCheck) and fix critical findings
+  - [ ] Revalidate sensitive vars and scopes (least privilege) in CI/CD and cloud
+  - [ ] Regenerate SBOM and rescan images/deps (syft/grype/trivy/snyk)
+  - [ ] Verify image signing/enforcement (cosign/OPA/Gatekeeper)
+  - [ ] Validate Docker/K8s configs (rootless, readOnlyRootFilesystem, seccomp)
+  - [ ] Run benchmarks/hardening (kube-bench, kube-hunter, CIS Docker)
+  - [ ] Review logs/alerts, backup/restore SLAs and recovery drills
+  - [ ] Validate key/token rotation and credential expiration
+  - ■ Attach evidence in report and open follow-up tickets
+
+2) Procedimentos recomendados / Recommended procedures
+- Docker:
+  - PT: Imagens mínimas (distroless/alpine), rootless, USER não-root, drop de capabilities, scan com Trivy/Snyk, política de resource limits, não usar latest.
+  - EN: Minimal images (distroless/alpine), rootless, non-root USER, drop capabilities, scan with Trivy/Snyk, resource limits policy, avoid latest tags.
+- Kubernetes:
+  - PT: PodSecurity/PSA enforced, NetworkPolicies, readOnlyRootFilesystem, seccomp/apparmor, requests/limits, liveness/readiness, secrets via K8s/Vault, RBAC least privilege.
+  - EN: Enforce PodSecurity/PSA, NetworkPolicies, readOnlyRootFilesystem, seccomp/apparmor, requests/limits, probes, secrets via K8s/Vault, least-privilege RBAC.
+- Cloud:
+  - PT: Contas separadas por ambiente, IAM com least privilege, rotação de chaves, criptografia at-rest/in-transit, CloudTrail/Audit Logs, S3/Object lock e versionamento.
+  - EN: Separate accounts by env, least-privilege IAM, key rotation, at-rest/in-transit encryption, CloudTrail/Audit logs, object lock/versioning.
+
+3) Ferramentas automatizadas / Automated tools
+- Scripts: ShellCheck, shfmt, Bandit (para Python utilitário), Semgrep rules.
+- Containers: Trivy, Grype, Syft (SBOM), Snyk.
+- Kubernetes: kube-bench, kube-hunter, Polaris, Kubesec.
+- Cloud/Configs: tfsec, Checkov, Terrascan, OpenSCAP, AWS Config/Config Rules.
+- Supply-chain: cosign (assinatura/verificação), Sigstore policy-controller, osv-scanner.
+
+4) Modelo de relatório resumido / Summary report template
+```
+Título/Title: Auditoria Scripts & Infra - <YYYY-MM> (Mensal/Trimestral)
+Escopo/Scope: Repositórios, imagens, clusters, contas cloud
+Resumo Executivo/Executive Summary: <3-5 bullets com principais riscos e ações>
+Metodologia/Methodology: Ferramentas e checks executados
+Achados/Findings:
+  - Criticidade/Severity: High | Medium | Low
+  - Descrição/Description: <texto>
+  - Evidência/Evidence: <arquivo/link>
+  - Ação/Action: <fix/owner/data>
+Métricas/Metrics: #CVEs High, %pods com R/O FS, %jobs com sucesso, tempo MTTR
+Riscos Abertos/Open Risks: <lista>
+Plano de Ação/Action Plan: <tarefas, prazos, responsáveis>
+Aprovação/Approval: <assinado por>
+```
+
+5) Agendamento via CI/CD / Scheduling via CI/CD
+- GitHub Actions (cron mensal):
+```
+name: Monthly Audit
+on:
+  schedule:
+    - cron: '0 3 1 * *'   # 03:00 UTC todo dia 1
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Security Tools
+        run: |
+          ./scripts/ci/audit.sh
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-report
+          path: reports/audit-*.md
+```
+- Jenkins (pipeline nightly/weekly):
+```
+pipeline {
+  triggers { cron('H H(2-4) 1 * *') } // mensal, janela 02:00-04:00
+  agent any
+  stages {
+    stage('Run Audit') { steps { sh './scripts/ci/audit.sh' } }
+    stage('Archive Report') { steps { archiveArtifacts artifacts: 'reports/audit-*.md', fingerprint: true } }
+  }
+}
+```
+
+6) Exemplo visual de agendamento + Slack/Email / Visual scheduling + Slack/Email integration
+- Script de auditoria (exemplo):
+```
+#!/usr/bin/env bash
+set -euo pipefail
+mkdir -p reports
+REPORT="reports/audit-$(date -u +%F).md"
+{
+  echo "# Audit $(date -u +%F)";
+  echo "## Tools";
+  shellcheck -V || true
+  echo "## Results";
+  trivy fs --quiet --exit-code 0 . || true
+} > "$REPORT"
+# Slack (via webhook)
+[ -n "${SLACK_WEBHOOK_URL:-}" ] && curl -s -X POST -H 'Content-type: application/json' \
+  --data "{\"text\":\"Audit finished: $REPORT\"}" "$SLACK_WEBHOOK_URL" || true
+```
+- GitHub Actions passo Slack/Email:
+```
+- name: Notify Slack
+  if: always()
+  uses: rtCamp/action-slack-notify@v2
+  env:
+    SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+    SLACK_MESSAGE: "Audit finished. Artifacts attached."
+
+- name: Send Email (SMTP)
+  if: always()
+  uses: dawidd6/action-send-mail@v3
+  with:
+    server_address: smtp.example.com
+    server_port: 587
+    username: ${{ secrets.SMTP_USER }}
+    password: ${{ secrets.SMTP_PASS }}
+    subject: Audit finished
+    to: security@example.com
+    from: ci@example.com
+    attachments: reports/audit-*.md
+```
+
+Notas / Notes:
+- Execute auditorias em ambientes efêmeros para evitar impacto.
+- Centralize relatórios (S3/Artifacts) e aplique retenção/ACLs.
+- Defina SLOs para correção de findings com ownership claro.
