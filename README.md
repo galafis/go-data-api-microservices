@@ -1,5 +1,7 @@
 # Microsserviços de API de Dados em Go / Go Data API Microservices
 
+![Go Data API Microservices Hero Image](hero_image.png)
+
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Go Version](https://img.shields.io/badge/go-1.18+-00ADD8.svg)
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)
@@ -62,4 +64,5 @@ For complete documentation in English, please refer to [README.en-us.md](docs/RE
 ---
 
 Created by Gabriel Demetrios Lafis
+
 
