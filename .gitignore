@@ -1,9 +1,47 @@
-*.log
-.DS_Store
-Thumbs.db
-.env
-.vscode/
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go tool
+.go/src
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+
+# Editor directories and files
 .idea/
-*~
-*.tmp
-*.temp
+.vscode/
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+*.log
+
+# Database files
+*.db
+*.sqlite
+
+# Docker
+docker-compose.override.yml
+
+# Build outputs
+build/
+dist/
+
+# GitHub Pages
+.github/workflows/
+_site/
+

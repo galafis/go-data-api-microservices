@@ -1,0 +1,29 @@
+graph TD
+    A[Client] --> B(API Gateway)
+    B --> C(Auth Service)
+    B --> D(Data Service)
+    B --> E(Analytics Service)
+
+    C --> F(Database Auth)
+    D --> G(Database Data)
+    E --> H(Database Analytics)
+
+    subgraph Microservices
+        C
+        D
+        E
+    end
+
+    subgraph External Systems
+        A
+    end
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#ccf,stroke:#333,stroke-width:2px
+    style D fill:#cfc,stroke:#333,stroke-width:2px
+    style E fill:#ffc,stroke:#333,stroke-width:2px
+    style F fill:#fcc,stroke:#333,stroke-width:2px
+    style G fill:#cff,stroke:#333,stroke-width:2px
+    style H fill:#fcf,stroke:#333,stroke-width:2px
+
