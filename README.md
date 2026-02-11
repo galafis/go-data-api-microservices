@@ -4,10 +4,6 @@
 
 ## 🖼️ Imagem Hero
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Go Version](https://img.shields.io/badge/go-1.18+-00ADD8.svg)
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)
-![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen.svg)
 
 ## 🇧🇷 Português
 
